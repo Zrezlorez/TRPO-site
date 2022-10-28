@@ -3,6 +3,7 @@ import * as utils from "./utils.js"
 $(document).ready(async function () {
 
     await updateUsersTable()
+    await usersTableColumn()
 
     $(".table #editBtn").bind("click", async function() {
         let patchedUser = await fetch("/api/users/" + this.value)
@@ -123,25 +124,46 @@ $(document).ready(async function () {
         await updateUsersTable()
     })
 })
-
+async function usersTableColumn() {
+    let body = $(".table #usersTableColumn")
+    body.empty()
+    let days = await fetch("/api/days")
+                .then(response => response.json())
+                .then(days => {
+                    return days
+                })
+    let tr = $("<tr/>")
+    let thName = $("<th/>")
+    thName.text("Имя студента")
+    tr.append(thName)
+    console.log(days)
+    for (let day of days) {
+        let th = $("<th/>")
+        th.text(day.date)
+        tr.append(th)
+    }
+    body.append(tr)
+}
 async function updateUsersTable() {
     let body = $(".table #usersTableBody")
     body.empty()
-    let users = await fetch("/api/users")
-        .then(response => response.json())
-        .then(users => {
-            return users
-        })
+    let users = await fetch("/api/gradeinfo")
+                .then(response => response.json())
+                .then(users => {
+                    return users
+                })
     for (let user of users) {
-        console.log(user)
         let tr = $("<tr/>")
         let th = $("<th/>")
         th.text(user.student)
         tr.append(th)
-        let tdName = $("<td/>")
-        tdName.text(user.student)
-        tr.append(tdName)
-
+        for(let lesson of user.lessons) {
+            if(lesson.name == "ТРПО") {
+                let tdLesson = $("<td/>")
+                tdLesson.text(lesson.grade)
+                tr.append(tdLesson)
+            }
+        }
         body.append(tr)
     }
 }
