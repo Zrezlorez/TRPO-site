@@ -1,0 +1,23 @@
+
+spring:
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/TRPO"
+    driver-class-name: "org.postgresql.Driver"
+    username: postgres
+    password: 12111980
+  jpa:
+    properties:
+      hibernate:
+        enable_lazy_load_no_trans: "true"
+        dialect: "org.hibernate.dialect.PostgreSQLDialect"
+    hibernate:
+      ddl-auto: create-drop
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
+
+#spring.mvc.hiddenmethod.filter.enabled=true
+#spring.webflux.hiddenmethod.filter.enabled=true
+
+#spring.jpa.database-platform=org.hibernate.dialect.MySQL5InnoDBDialect
