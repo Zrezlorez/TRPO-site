@@ -1,6 +1,10 @@
 package me.igorkudashev.crud.service;
 
 import lombok.RequiredArgsConstructor;
+import me.igorkudashev.crud.model.Day;
+import me.igorkudashev.crud.model.Lesson;
+import me.igorkudashev.crud.repository.DayRepository;
+import me.igorkudashev.crud.repository.LessonRepository;
 import me.igorkudashev.crud.repository.UserRepository;
 import me.igorkudashev.crud.model.User;
 import org.springframework.security.core.Authentication;
@@ -19,6 +23,8 @@ import java.util.Optional;
 public class UserServiceImp implements UserService {
 
     private final UserRepository userRepository;
+    private final LessonRepository lessonRepository;
+    private final DayRepository dayRepository;
     private final RoleService roleService;
     private final PasswordEncoder encoder;
 
@@ -82,21 +88,19 @@ public class UserServiceImp implements UserService {
     public void fillDataBase() {
         findAll().forEach(user -> deleteById(user.getId()));
 
-
-
-        User user1 = new User()
+        add(new User()
                 .setName("a")
                 .setPassword("a")
                 .setStudent("данил")
-                .addRole(roleService.findByName("ROLE_ADMIN"));
-
-        User user2 = new User()
+                .addRole(roleService.findByName("ROLE_ADMIN")));
+        add(new User()
                 .setName("zrezlorez")
                 .setPassword("zxc")
                 .setStudent("тимофей")
-                .addRole(roleService.findByName("ROLE_USER"));
-        add(user1);
-        add(user2);
+                .addRole(roleService.findByName("ROLE_USER")));
+
+        lessonRepository.save(new Lesson().setName("ТРПО"));
+        dayRepository.save(new Day().setName("15.02.2022"));
 
 
     }

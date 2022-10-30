@@ -1,20 +1,15 @@
 package me.igorkudashev.crud.dto.request;
 
-
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotNull;
+
 @Data
 @Accessors
-public class AddGradeInfoRequest {
-
+public class PatchGradeInfoRequest {
     @NotNull
-    private Long userId;
-    @NotNull
-    private Long lessonId;
+    private Long id;
 
     private String grade;
-    @NotNull
-    private Long dateId;
 }

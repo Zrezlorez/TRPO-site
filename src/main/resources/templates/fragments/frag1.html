@@ -25,25 +25,18 @@
               <div class="collapse navbar-collapse" id="navbarSupportedContent">
                   <ul class="navbar-nav me-auto mb-lg-0">
                       <li class="nav-item px-3">
-                          <a class="btn btn-light" th:href="@{/}">Home page</a>
-                      </li>
-                      <li class="nav-item nav-link active px-3">
-                          <b><a id="userName"></a></b>
-                          <a id="userRoles"></a>
+                          <a class="btn btn-light" th:href="@{/}">Домашняя страница</a>
                       </li>
                   </ul>
               </div>
             </div>
             <ul class="navbar-nav me-auto mb-lg-0">
                 <li class="nav-item px-5">
-                    <a class="btn btn-light" sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">Admin panel</a>
+                    <a class="btn btn-light" sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">Журнал</a>
                 </li>
                 <li class="nav-item px-5">
-                    <a class="btn btn-light" th:if="${loggedUser} != null" th:href="@{/user}">My profile</a>
-                </li>
-                <li class="nav-item px-5">
-                    <a class="btn btn-light" role="button" th:if="${loggedUser} == null" href="/login">Log in</a>
-                    <a class="btn btn-light" role="button" th:if="${loggedUser} != null" href="/logout">Log out</a>
+                    <a class="btn btn-light" role="button" th:if="${loggedUser} == null" href="/login">Войти</a>
+                    <a class="btn btn-light" role="button" th:if="${loggedUser} != null" href="/logout">Выйти</a>
                 </li>
             </ul>
         </nav>

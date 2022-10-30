@@ -1,89 +1,9 @@
 import * as utils from "./utils.js"
 
 $(document).ready(async function () {
-
-    await updateUsersTable()
     await usersTableColumn()
+    await updateUsersTable()
 
-    $(".table #editBtn").bind("click", async function() {
-        let patchedUser = await fetch("/api/users/" + this.value)
-            .then(response => response.json())
-            .then(user => {
-                return user
-            })
-        let select = $("#editRoles")
-        select.empty()
-        $("#editId").val(patchedUser.id)
-        $("#editName").val(patchedUser.name)
-        $("#editPassword").val(patchedUser.password)
-        let roles = await fetch("/api/roles")
-            .then(response => response.json())
-            .then(rolesList => {
-                return rolesList
-            })
-        for (let role of roles) {
-            let option = $("<option/>")
-            option.val(role.id)
-            option.text(role.role)
-            for (let userRole of patchedUser.roles) {
-                if (role.id === userRole.id) {
-                    option.attr("selected", true)
-                    break
-                }
-            }
-            select.append(option)
-        }
-        $("#editModal").modal("show")
-    })
-
-    $(".table #deleteBtn").bind("click", async function() {
-        let deletedUser = await fetch("/api/users/" + this.value)
-            .then(response => response.json())
-            .then(user => {
-                return user
-            })
-        let select = $("#deleteRoles")
-        select.empty()
-        $("#deleteId").val(deletedUser.id)
-        $("#deleteName").val(deletedUser.name)
-        $("#deletePassword").val(deletedUser.password)
-        for (let role of deletedUser.roles) {
-            let option = $("<option/>")
-            option.text(role.role)
-            select.append(option)
-        }
-        $("#deleteModal").modal("show")
-    })
-
-    $("#submitEditBtn").bind("click", async function() {
-        let patchedUser = {
-            name: $("#editName").val(),
-            password: $("#editPassword").val(),
-            roles: []
-        }
-        for (let option of $("#editRoles").children()) {
-            if (option.selected) {
-                let patchedRoleId = option.value
-                await fetch("/api/roles/" + patchedRoleId)
-                    .then(response => response.json())
-                    .then(role => {
-                        patchedUser.roles.push(role)
-                    })
-            }
-        }
-        let patchedUserId = $("#editId").val()
-        await fetch("/api/users/" + patchedUserId, {
-            method: "PATCH",
-            body: JSON.stringify(patchedUser),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-        await updateUsersTable()
-        if (Number(patchedUserId) === await utils.getAuthUserId()) {
-            await utils.updateUserInfo()
-        }
-    })
 
     $("#submitDeleteBtn").bind("click", async function() {
         let deletedUserId = $("#deleteId").val()
@@ -95,24 +15,38 @@ $(document).ready(async function () {
         })
         await updateUsersTable()
     })
-
-    $("#submitNewBtn").bind("click", async function() {
-        let createdUser = {
-            name: $("#newName").val(),
-            password: $("#newPassword").val(),
-            roles: []
+    async function addGrade(userId, lessonId, dayId, grade) {
+        let createdGrade = {
+            dateId: dayId,
+            grade: grade,
+            lessonId: lessonId,
+            userId: userId
         }
-        $("#newName").val("")
-        $("#newPassword").val("")
-        for (let option of $("#newRoles").children()) {
-            if (option.selected) {
-                await fetch("/api/roles/" + option.value)
-                    .then(response => response.json())
-                    .then(role => {
-                        createdUser.roles.push(role)
-                    })
-                option.selected = false
+        await fetch("/api/gradeinfo/", {
+            method: "POST",
+            body: JSON.stringify(createdGrade),
+            headers: {
+                "Content-Type": "application/json"
             }
+        })
+        await updateUsersTable()
+    }
+    async function patchGrade(gradeId, grade) {
+        await fetch("/api/gradeinfo/" + gradeId, {
+            method: "PATCH",
+            body: grade,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        await updateUsersTable()
+    }
+    async function addUser(studentName) {
+        let createdUser = {
+            name: studentName,
+            password: "student",
+            roles: [],
+            student: studentName
         }
         await fetch("/api/users", {
             method: "POST",
@@ -122,48 +56,118 @@ $(document).ready(async function () {
             }
         })
         await updateUsersTable()
-    })
-})
-async function usersTableColumn() {
-    let body = $(".table #usersTableColumn")
-    body.empty()
-    let days = await fetch("/api/days")
-                .then(response => response.json())
-                .then(days => {
-                    return days
-                })
-    let tr = $("<tr/>")
-    let thName = $("<th/>")
-    thName.text("Имя студента")
-    tr.append(thName)
-    console.log(days)
-    for (let day of days) {
-        let th = $("<th/>")
-        th.text(day.date)
-        tr.append(th)
     }
-    body.append(tr)
-}
-async function updateUsersTable() {
-    let body = $(".table #usersTableBody")
-    body.empty()
-    let users = await fetch("/api/gradeinfo")
-                .then(response => response.json())
-                .then(users => {
-                    return users
-                })
-    for (let user of users) {
-        let tr = $("<tr/>")
-        let th = $("<th/>")
-        th.text(user.student)
-        tr.append(th)
-        for(let lesson of user.lessons) {
-            if(lesson.name == "ТРПО") {
-                let tdLesson = $("<td/>")
-                tdLesson.text(lesson.grade)
-                tr.append(tdLesson)
+    async function addDay(date) {
+        await fetch("/api/days", {
+            method: "POST",
+            body: date.toString(),
+            headers: {
+                "Content-Type": "application/json"
             }
+        })
+        await updateUsersTable()
+        await usersTableColumn()
+    }
+    async function usersTableColumn() {
+        let body = $(".table #usersTableColumn")
+        body.empty()
+        let days = await fetch("/api/days")
+                    .then(response => response.json())
+                    .then(days => {
+                        return days
+                    })
+        let tr = $("<tr/>")
+        let thName = $("<th/>")
+        thName.text("Имя студента")
+        tr.append(thName)
+        for (let day of days) {
+            let th = $("<th/>")
+            th.text(day.name)
+            tr.append(th)
         }
         body.append(tr)
+        let thBtn = $("<th/>")
+        let addBtn = $("<input type='text' placeholder='Новый день'>")
+        addBtn.keypress(function(event) {
+            let keycode = (event.keyCode ? event.keyCode : event.which);
+            if(keycode == '13') {
+                addDay(addBtn.val())
+            }
+        })
+        thBtn.append(addBtn)
+        tr.append(thBtn)
+        body.append(tr)
     }
-}
+
+    async function updateUsersTable() {
+        let gradeinfo = await fetch("/api/gradeinfo")
+            .then(response => response.json())
+            .then(gradeinfo => {
+                return gradeinfo
+            })
+        let users = await fetch("/api/users")
+            .then(response => response.json())
+            .then(users => {
+                return users
+            })
+        let days = await fetch("/api/days")
+            .then(response => response.json())
+            .then(days => {
+                return days
+            })
+        let body = $(".table #usersTableBody")
+        body.empty()
+        for (let user of users) {
+            console.log("итерация юзера " + user.student)
+            let tr = $("<tr/>")
+            let th = $("<th/>")
+            th.text(user.student)
+            tr.append(th)
+            for(let day of days) {
+                console.log("итерация дня номер " + day.name)
+                let isAdd = true
+                for(let table of gradeinfo) {
+                    console.log("итерация журнала")
+                    if(table.date.id != day.id) {
+                        console.log("неправильна дата")
+                        continue
+                    }
+                    if(table.user.id == user.id) {
+                        let td = $("<td/>")
+                        let editBtn = $("<input type='text' value=" + table.grade +">")
+                        console.log("найдена оценка")
+                        editBtn.keypress(function(event) {
+                            let keycode = (event.keyCode ? event.keyCode : event.which);
+                            if(keycode == '13') {
+                                patchGrade(table.id, editBtn.val())
+                            }
+                        })
+                        td.append(editBtn)
+                        tr.append(td)
+                        isAdd = false
+                    }
+                }
+                if(isAdd) {
+                    console.log("добавляем пустую оценку")
+                    addGrade(user.id, 1, day.id, " ")
+                }
+
+            }
+            body.append(tr)
+        }
+        let tr = $("<tr/>")
+        let td = $("<td/>")
+        let addBtn = $("<input type='text' placeholder='Новый студент'>")
+        addBtn.keypress(function(event) {
+            let keycode = (event.keyCode ? event.keyCode : event.which);
+            if(keycode == '13') {
+                console.log("добавлен новый пользователь")
+                addUser(addBtn.val())
+
+            }
+        })
+        td.append(addBtn)
+        tr.append(td)
+        body.append(tr)
+    }
+})
