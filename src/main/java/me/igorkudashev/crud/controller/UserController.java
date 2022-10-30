@@ -30,7 +30,7 @@ public class UserController {
 
     @GetMapping(value = "/user")
     public String getUserPage() {
-        return "profile";
+        return "admin";
     }
 
     @ModelAttribute

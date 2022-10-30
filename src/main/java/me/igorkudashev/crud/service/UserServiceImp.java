@@ -89,18 +89,18 @@ public class UserServiceImp implements UserService {
         findAll().forEach(user -> deleteById(user.getId()));
 
         add(new User()
-                .setName("a")
-                .setPassword("a")
-                .setStudent("данил")
+                .setName("admin")
+                .setPassword("admin")
+                .setStudent("Безносюк Артём")
                 .addRole(roleService.findByName("ROLE_ADMIN")));
         add(new User()
-                .setName("zrezlorez")
-                .setPassword("zxc")
-                .setStudent("тимофей")
+                .setName("")
+                .setPassword("")
+                .setStudent("Бабкин Даниил")
                 .addRole(roleService.findByName("ROLE_USER")));
 
         lessonRepository.save(new Lesson().setName("ТРПО"));
-        dayRepository.save(new Day().setName("15.02.2022"));
+        dayRepository.save(new Day().setName("31.10.2022"));
 
 
     }
