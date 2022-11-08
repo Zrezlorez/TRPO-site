@@ -6,6 +6,12 @@
     <title>Журнал</title>
 </head>
 <body>
+<style>
+    .no-border {
+    border: 0;
+    box-shadow: none;
+    }
+</style>
 <div th:insert="~{fragments/frag1 :: navbar}"></div>
 <div class="row">
     <div class="col-sm-2">
@@ -18,7 +24,7 @@
         <div class="tab-content">
             <div class="tab-pane fade show active" id="users">
                 <h4>ТРПО</h4>
-                <table class="table">
+                <table class="table table-bordered table-sm">
                     <thead id="usersTableColumn">
                     </thead>
                     <tbody id="usersTableBody">

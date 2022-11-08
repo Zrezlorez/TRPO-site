@@ -5,16 +5,22 @@ $(document).ready(async function () {
     await updateUsersTable()
 
 
-    $("#submitDeleteBtn").bind("click", async function() {
-        let deletedUserId = $("#deleteId").val()
-        if (Number(deletedUserId) === await utils.getAuthUserId()) {
-            window.location = "/logout"
+    async function findGrade(userId, dayId) {
+        let info = {
+            userId: userId,
+            dayId: dayId
         }
-        await fetch("/api/users/" + deletedUserId, {
-            method: "DELETE"
-        })
-        await updateUsersTable()
-    })
+        let grade = await fetch("/api/gradeinfo/find", {
+               method: "POST",
+               body: JSON.stringify(info),
+               headers: {
+                   "Content-Type": "application/json"
+               }
+           })
+           .then(response => response.json())
+           .then(response => {return response})
+        return await grade;
+    }
     async function addGrade(userId, lessonId, dayId, grade) {
         let createdGrade = {
             dateId: dayId,
@@ -22,7 +28,7 @@ $(document).ready(async function () {
             lessonId: lessonId,
             userId: userId
         }
-        await fetch("/api/gradeinfo/", {
+        await fetch("/api/gradeinfo/add", {
             method: "POST",
             body: JSON.stringify(createdGrade),
             headers: {
@@ -35,6 +41,29 @@ $(document).ready(async function () {
         await fetch("/api/gradeinfo/" + gradeId, {
             method: "PATCH",
             body: grade,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        await updateUsersTable()
+    }
+
+
+    async function patchUser(userId, studentName) {
+        let patchedUser = {
+            name: studentName,
+            password: "student",
+            student: studentName,
+            roles: []
+        }
+        await fetch("/api/roles/1")
+            .then(response => response.json())
+            .then(role => {
+                patchedUser.roles.push(role)
+            })
+        await fetch("/api/users/" + userId, {
+            method: "PATCH",
+            body: JSON.stringify(patchedUser),
             headers: {
                 "Content-Type": "application/json"
             }
@@ -57,6 +86,18 @@ $(document).ready(async function () {
         })
         await updateUsersTable()
     }
+
+    async function patchDay(dayId, day) {
+        await fetch("/api/days/" + dayId, {
+            method: "PATCH",
+            body: day,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        await updateUsersTable()
+        await usersTableColumn()
+    }
     async function addDay(date) {
         await fetch("/api/days", {
             method: "POST",
@@ -68,6 +109,7 @@ $(document).ready(async function () {
         await updateUsersTable()
         await usersTableColumn()
     }
+
     async function usersTableColumn() {
         let body = $(".table #usersTableColumn")
         body.empty()
@@ -82,12 +124,19 @@ $(document).ready(async function () {
         tr.append(thName)
         for (let day of days) {
             let th = $("<th/>")
-            th.text(day.name)
+            let editDayBtn = $("<input type='text' class='no-border' style='text-align: center value='" + day.name +"'>")
+            editDayBtn.keypress(function(event) {
+                    let keycode = (event.keyCode ? event.keyCode : event.which);
+                    if(keycode == '13') {
+                        patchDay(day.id, editDayBtn.val())
+                    }
+                })
+            th.append(editDayBtn)
             tr.append(th)
         }
         body.append(tr)
         let thBtn = $("<th/>")
-        let addBtn = $("<input type='text' placeholder='Новый день'>")
+        let addBtn = $("<input type='text' class='no-border' placeholder='Новый день'>")
         addBtn.keypress(function(event) {
             let keycode = (event.keyCode ? event.keyCode : event.which);
             if(keycode == '13') {
@@ -98,13 +147,7 @@ $(document).ready(async function () {
         tr.append(thBtn)
         body.append(tr)
     }
-
     async function updateUsersTable() {
-        let gradeinfo = await fetch("/api/gradeinfo")
-            .then(response => response.json())
-            .then(gradeinfo => {
-                return gradeinfo
-            })
         let users = await fetch("/api/users")
             .then(response => response.json())
             .then(users => {
@@ -118,56 +161,47 @@ $(document).ready(async function () {
         let body = $(".table #usersTableBody")
         body.empty()
         for (let user of users) {
-            console.log("итерация юзера " + user.student)
+            console.log(user)
+            if(user.roles[0].role != "ROLE_USER") {continue}
             let tr = $("<tr/>")
             let th = $("<th/>")
-            th.text(user.student)
+            let editNameBtn = $("<input type='text' class='no-border'  value='" + user.student +"'>")
+            editNameBtn.keypress(function(event) {
+                    let keycode = (event.keyCode ? event.keyCode : event.which);
+                    if(keycode == '13') {
+                        patchUser(user.id, editNameBtn.val())
+                    }
+                })
+            th.append(editNameBtn)
             tr.append(th)
             for(let day of days) {
-                console.log("итерация дня номер " + day.name)
-                let isAdd = true
-                for(let table of gradeinfo) {
-                    console.log("итерация журнала")
-                    if(table.date.id != day.id) {
-                        console.log("неправильна дата")
-                        continue
+                let table = await findGrade(user.id, day.id).then(table => {return table})
+                let td = $("<td style='text-align: center'/>")
+                let editBtn = $("<input type='text' size='2' class='border border-1' value=" + table.grade +">")
+                editBtn.keypress(function(event) {
+                    let keycode = (event.keyCode ? event.keyCode : event.which);
+                    if(keycode == '13') {
+                        patchGrade(table.id, editBtn.val())
                     }
-                    if(table.user.id == user.id) {
-                        let td = $("<td/>")
-                        let editBtn = $("<input type='text' value=" + table.grade +">")
-                        console.log("найдена оценка")
-                        editBtn.keypress(function(event) {
-                            let keycode = (event.keyCode ? event.keyCode : event.which);
-                            if(keycode == '13') {
-                                patchGrade(table.id, editBtn.val())
-                            }
-                        })
-                        td.append(editBtn)
-                        tr.append(td)
-                        isAdd = false
-                    }
-                }
-                if(isAdd) {
-                    console.log("добавляем пустую оценку")
-                    addGrade(user.id, 1, day.id, " ")
-                }
-
+                })
+                td.append(editBtn)
+                tr.append(td)
             }
+            let emptyTd = $("<td/>")
+            tr.append(emptyTd)
             body.append(tr)
         }
         let tr = $("<tr/>")
-        let td = $("<td/>")
-        let addBtn = $("<input type='text' placeholder='Новый студент'>")
+        let tdBtn = $("<td/>")
+        let addBtn = $("<input type='text' class='no-border' placeholder='Новый студент'>")
         addBtn.keypress(function(event) {
             let keycode = (event.keyCode ? event.keyCode : event.which);
             if(keycode == '13') {
-                console.log("добавлен новый пользователь")
                 addUser(addBtn.val())
-
             }
         })
-        td.append(addBtn)
-        tr.append(td)
+        tdBtn.append(addBtn)
+        tr.append(tdBtn)
         body.append(tr)
     }
 })
