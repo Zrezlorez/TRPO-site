@@ -2,6 +2,7 @@ package org.algiri.crud.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.algiri.crud.model.User;
+import org.algiri.crud.repository.GradeInfoRepository;
 import org.algiri.crud.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.List;
 public class UserApiController {
 
     private final UserService userService;
+    private final GradeInfoRepository gradeInfoRepository;
 
 
     @PostMapping("")
@@ -43,9 +45,9 @@ public class UserApiController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
-        return userService.deleteById(id)
-                ? new ResponseEntity<>(HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+        gradeInfoRepository.deleteByUser(id);
+        userService.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("")

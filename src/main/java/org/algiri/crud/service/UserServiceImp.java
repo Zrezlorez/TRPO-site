@@ -2,8 +2,10 @@ package org.algiri.crud.service;
 
 import lombok.RequiredArgsConstructor;
 import org.algiri.crud.model.Day;
+import org.algiri.crud.model.Group;
 import org.algiri.crud.model.Lesson;
 import org.algiri.crud.repository.DayRepository;
+import org.algiri.crud.repository.GroupRepository;
 import org.algiri.crud.repository.LessonRepository;
 import org.algiri.crud.repository.UserRepository;
 import org.algiri.crud.model.User;
@@ -25,6 +27,7 @@ public class UserServiceImp implements UserService {
     private final UserRepository userRepository;
     private final LessonRepository lessonRepository;
     private final DayRepository dayRepository;
+    private final GroupRepository groupRepository;
     private final RoleService roleService;
     private final PasswordEncoder encoder;
 
@@ -47,6 +50,7 @@ public class UserServiceImp implements UserService {
     public boolean update(Long id, User user) {
         if (userRepository.findById(id).isPresent()) {
             user.setId(id);
+            user.setPassword(encoder.encode(user.getPassword()));
             userRepository.save(user);
             return true;
         }
@@ -88,25 +92,28 @@ public class UserServiceImp implements UserService {
     public void fillDataBase() {
         findAll().forEach(user -> deleteById(user.getId()));
 
+        groupRepository.save(new Group().setName("ИС214"));
+
         add(new User()
-                .setName("a")
-                .setPassword("a")
-                .setStudent("Вихров")
+                .setName("admin")
+                .setPassword("admin")
+                .setStudentName("Вихров В.С")
                 .addRole(roleService.findByName("ROLE_ADMIN")));
         add(new User()
                 .setName("Бабкин Даниил")
                 .setPassword("student")
-                .setStudent("Бабкин Даниил")
+                .setStudentName("Бабкин Даниил")
+                .setGroup(groupRepository.findByName("ИС214"))
                 .addRole(roleService.findByName("ROLE_USER")));
         add(new User()
                 .setName("Бруданин Данилка")
                 .setPassword("student")
-                .setStudent("Бруданин Данилка")
+                .setStudentName("Бруданин Данилка")
+                .setGroup(groupRepository.findByName("ИС214"))
                 .addRole(roleService.findByName("ROLE_USER")));
+
 
         lessonRepository.save(new Lesson().setName("ТРПО"));
         dayRepository.save(new Day().setName("31.10.2022"));
-
-
     }
 }

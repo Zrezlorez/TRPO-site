@@ -1,9 +1,7 @@
 export async function getAuthUser() {
     let response = await fetch("/api/users/user")
     return response.ok ?
-        response.json()
-        :
-        null
+        response.json() : null
 }
 
 export async function getAuthUserId() {
@@ -17,11 +15,12 @@ export async function getAuthUserId() {
 export async function updateUserInfo() {
     let authUser = await getAuthUser()
     if (authUser != null) {
-        $("#userName").text(authUser.name)
-        let rolesText = " with roles: "
-        for (let role of authUser.roles) {
-            rolesText += `${role.role} `
+        let text = ""
+        if(authUser.roles[0].role == "ROLE_ADMIN") {
+            text = "Преподаватель "
         }
-        $("#userRoles").text(rolesText)
+        else {text = "Студент "}
+        $("#postName").text(text)
+        $("#userName").text(authUser.studentName)
     }
 }

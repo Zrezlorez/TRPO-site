@@ -38,7 +38,7 @@ public class GradeInfoController {
                 .findById(request.getUserId())
                 .orElseThrow(UserNotFoundException::new);
         Lesson lesson = lessonRepository
-                .findById(request.getLessonId())
+                .findById(request.getLessonId()+1)
                 .orElseThrow(LessonNotFoundException::new);
         Day day = dayRepository
                 .findById(request.getDateId())

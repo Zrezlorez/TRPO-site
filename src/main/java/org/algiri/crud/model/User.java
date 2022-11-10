@@ -30,9 +30,11 @@ public class User implements UserDetails {
 
     private String password;
 
-    private String student;
+    private String studentName;
 
-
+    @OneToOne()
+    @JoinColumn(name = "group_id")
+    private Group group;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",

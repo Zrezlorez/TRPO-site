@@ -22,6 +22,8 @@ public class GradeInfo {
     @JoinColumn(name = "lesson_id")
     private Lesson lesson;
 
+
+
     @OneToOne()
     @JoinColumn(name = "day_id")
     private Day day;
