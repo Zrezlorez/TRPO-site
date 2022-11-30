@@ -1,5 +1,3 @@
-import * as utils from "./utils.js"
-
 $(document).ready(async function () {
     await loadTabList()
     await usersTableColumn()
@@ -32,22 +30,6 @@ $(document).ready(async function () {
            .then(response => {return response})
         return await grade;
     }
-    async function addGrade(userId, lessonId, dayId, grade) {
-        let createdGrade = {
-            dateId: dayId,
-            grade: grade,
-            lessonId: lessonId,
-            userId: userId
-        }
-        await fetch("/api/gradeinfo/add", {
-            method: "POST",
-            body: JSON.stringify(createdGrade),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-        await updateUsersTable()
-    }
     async function patchGrade(gradeId, grade) {
         await fetch("/api/gradeinfo/" + gradeId, {
             method: "PATCH",
@@ -61,7 +43,7 @@ $(document).ready(async function () {
 
 
     async function patchUser(userId, studentName) {
-        if(studentName=="") {
+        if(!studentName) {
             await fetch("/api/users/" + userId, {
                         method: "DELETE"
                     })
@@ -70,7 +52,7 @@ $(document).ready(async function () {
             let patchedUser = {
                 name: studentName,
                 password: "student",
-                student: studentName,
+                studentName: studentName,
                 roles: [],
                 group: null
             }
@@ -79,7 +61,7 @@ $(document).ready(async function () {
                 .then(role => {
                     patchedUser.roles.push(role)
                 })
-            await fetch("/api/groups/" + $("a.active").text())
+            await fetch("/api/groups/ИС214") //+ $("a.active").text())
                 .then(response => response.json())
                 .then(group => {
                     patchedUser.group = group
@@ -91,7 +73,9 @@ $(document).ready(async function () {
                     "Content-Type": "application/json"
                 }
             })
+            console.log(patchedUser)
         }
+
         await updateUsersTable()
     }
     async function addUser(student) {
@@ -102,7 +86,7 @@ $(document).ready(async function () {
             studentName: student,
             group: null
         }
-        await fetch("/api/groups/" + $("a.active").text())
+        await fetch("/api/groups/ИС214")//+ $("a.active").text())
             .then(response => response.json())
             .then(group => {
                 createdUser.group = group
@@ -119,11 +103,12 @@ $(document).ready(async function () {
                 "Content-Type": "application/json"
             }
         })
+        console.log("add")
         await updateUsersTable()
     }
 
     async function patchDay(dayId, day) {
-        if(day=="") {
+        if(!day) {
             await fetch("/api/days/" + dayId, {
                         method: "DELETE"
                     })
@@ -165,8 +150,8 @@ $(document).ready(async function () {
         thName.text("Имя студента")
         tr.append(thName)
         for (let day of days) {
-            let th = $("<th style='text-align: center'/>")
-            let editDayBtn = $("<input type='text' class='no-border' style='text-align: center' value='" + day.name +"'>")
+            let th = $("<th class='card1'/>")
+            let editDayBtn = $("<input type='text' class='no-border card1' value='" + day.name +"'>")
             editDayBtn.keypress(function(event) {
                     let keycode = (event.keyCode ? event.keyCode : event.which);
                     if(keycode == '13') {
@@ -178,7 +163,7 @@ $(document).ready(async function () {
         }
         body.append(tr)
         let thBtn = $("<th/>")
-        let addBtn = $("<input type='text' class='no-border' placeholder='Новый день'>")
+        let addBtn = $("<input type='text' class='no-border card1' placeholder='Новый день'>")
         addBtn.keypress(function(event) {
             let keycode = (event.keyCode ? event.keyCode : event.which);
             if(keycode == '13') {
@@ -203,14 +188,15 @@ $(document).ready(async function () {
         let body = $(".table #usersTableBody")
         body.empty()
         for (let user of users) {
-            if(user.roles[0].role != "ROLE_USER" || user.group.name!=$("a.active").text()) {continue}
+            if(user.roles[0].role != "ROLE_USER" || user.group.name!=$("#group-selector").text()) {
+                continue
+            }
             let tr = $("<tr/>")
             let th = $("<th/>")
             let editNameBtn = $("<input type='text' class='no-border'  value='" + user.studentName +"'>")
             editNameBtn.keypress(function(event) {
                     let keycode = (event.keyCode ? event.keyCode : event.which);
                     if(keycode == '13') {
-                        console.log(editNameBtn.val())
                         patchUser(user.id, editNameBtn.val())
                     }
                 })
@@ -218,7 +204,7 @@ $(document).ready(async function () {
             tr.append(th)
             for(let day of days) {
                 let table = await findGrade(user.id, day.id).then(table => {return table})
-                let td = $("<td style='text-align: center'/>")
+                let td = $("<td class='card1'/>")
                 let editBtn = $("<input type='text' size='2' class='border border-1' value=" + table.grade +">")
                 editBtn.keypress(function(event) {
                     let keycode = (event.keyCode ? event.keyCode : event.which);
@@ -237,8 +223,7 @@ $(document).ready(async function () {
         let tdBtn = $("<td/>")
         let addBtn = $("<input type='text' class='no-border' placeholder='Новый студент'>")
         addBtn.keypress(function(event) {
-            let keycode = (event.keyCode ? event.keyCode : event.which);
-            if(keycode == '13') {
+            if(event.keyCode == '13') {
                 addUser(addBtn.val())
             }
         })
@@ -253,32 +238,21 @@ $(document).ready(async function () {
                     .then(groups => {
                         return groups
                     })
-        let body = $("#v-pills-tab")
+        let body = $("#group-selector")
         body.empty()
-        let first = true
         for(let group of groups) {
-            let btn = $("<a class='nav-link'>")
-            if(first) {
-                btn.addClass("active")
-                first = false
-            }
-            btn.text(group.name)
-            first = ""
-            btn.bind("click", async function(){
-                $(".nav-link").removeClass("active")
-                btn.addClass("active")
-                await usersTableColumn()
-                await updateUsersTable()
-            })
-            body.append(btn)
+            body.append('<option value="">' + group.name + '</option>');
         }
-        let inp = $("<input type='text' class='border border-1' placeholder='Новый предмет' style='height:39px'>")
+        let inp = $("#addGroupBtn")
+        body.on('change', async function() {
+            await updateUsersTable()
+            inp.val("")
+        });
         inp.keypress(function(event) {
                       let keycode = (event.keyCode ? event.keyCode : event.which);
                       if(keycode == '13') {
                           addGroup(inp.val())
                       }
         })
-        body.append(inp)
    }
 })

@@ -73,7 +73,7 @@ public class AdminController {
         }
         model.addAttribute("users", userService.findAll());
         model.addAttribute("newUser", new User());
-        return "admin/admin";
+        return "admin";
     }
 
     @GetMapping("/users/{id}")
